@@ -1,0 +1,237 @@
+{
+	"info": {
+		"_postman_id": "5a851295-72cc-422f-b54e-d445530b57ff",
+		"name": "Django tasks",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32337571"
+	},
+	"item": [
+		{
+			"name": "Register",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"jeff\",\n    \"password\": \"jeff\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/{{base_tasks_path}}/api/register",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{base_tasks_path}}",
+						"api",
+						"register"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"username\": \"jeff\",\n    \"password\": \"jeff\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/{{base_tasks_path}}/api/login",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{base_tasks_path}}",
+						"api",
+						"login"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get projects",
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": [
+						{
+							"key": "payload",
+							"value": "{\n    \"user_id\": 1\n}",
+							"type": "string"
+						},
+						{
+							"key": "isSecretBase64Encoded",
+							"value": false,
+							"type": "boolean"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "header",
+							"value": "{}",
+							"type": "string"
+						},
+						{
+							"key": "secret",
+							"value": "your_secret_key",
+							"type": "string"
+						},
+						{
+							"key": "headerPrefix",
+							"value": "Authorization",
+							"type": "string"
+						},
+						{
+							"key": "algorithm",
+							"value": "HS256",
+							"type": "string"
+						},
+						{
+							"key": "queryParamKey",
+							"value": "token",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{base_url}}/{{base_tasks_path}}/api/projects",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{base_tasks_path}}",
+						"api",
+						"projects"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Create project",
+			"request": {
+				"auth": {
+					"type": "jwt",
+					"jwt": [
+						{
+							"key": "payload",
+							"value": "{\n    \"user_id\": 1\n}",
+							"type": "string"
+						},
+						{
+							"key": "isSecretBase64Encoded",
+							"value": false,
+							"type": "boolean"
+						},
+						{
+							"key": "addTokenTo",
+							"value": "header",
+							"type": "string"
+						},
+						{
+							"key": "header",
+							"value": "{}",
+							"type": "string"
+						},
+						{
+							"key": "secret",
+							"value": "your_secret_key",
+							"type": "string"
+						},
+						{
+							"key": "headerPrefix",
+							"value": "Authorization",
+							"type": "string"
+						},
+						{
+							"key": "algorithm",
+							"value": "HS256",
+							"type": "string"
+						},
+						{
+							"key": "queryParamKey",
+							"value": "token",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"name\": \"Project\",\n    \"description\": \"First project\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/{{base_tasks_path}}/api/projects",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"{{base_tasks_path}}",
+						"api",
+						"projects"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://127.0.0.1:8000",
+			"type": "string"
+		},
+		{
+			"key": "base_tasks_path",
+			"value": "tasks",
+			"type": "string"
+		}
+	]
+}

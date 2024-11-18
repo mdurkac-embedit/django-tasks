@@ -24,13 +24,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/{{base_tasks_path}}/api/register",
+					"raw": "{{base_url}}/register",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
-						"{{base_tasks_path}}",
-						"api",
 						"register"
 					]
 				}
@@ -55,13 +53,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/{{base_tasks_path}}/api/login",
+					"raw": "{{base_url}}/login",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
-						"{{base_tasks_path}}",
-						"api",
 						"login"
 					]
 				}
@@ -86,13 +82,11 @@
 				"method": "GET",
 				"header": [],
 				"url": {
-					"raw": "{{base_url}}/{{base_tasks_path}}/api/projects",
+					"raw": "{{base_url}}/projects",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
-						"{{base_tasks_path}}",
-						"api",
 						"projects"
 					]
 				}
@@ -114,13 +108,11 @@
 					}
 				},
 				"url": {
-					"raw": "{{base_url}}/{{base_tasks_path}}/api/projects",
+					"raw": "{{base_url}}/projects",
 					"host": [
 						"{{base_url}}"
 					],
 					"path": [
-						"{{base_tasks_path}}",
-						"api",
 						"projects"
 					]
 				}
@@ -146,8 +138,7 @@
 				"packages": {},
 				"exec": [
 					"const env = pm.variables.get(\"base_url\")",
-					"const app_path = pm.variables.get(\"base_tasks_path\")",
-					"const loginUrl = `${env}/${app_path}/api/login`;",
+					"const loginUrl = `${env}/login`;",
 					"",
 					"const loginPayload = {",
 					"    username: pm.variables.get(\"username\"),",
@@ -189,12 +180,7 @@
 	"variable": [
 		{
 			"key": "base_url",
-			"value": "http://127.0.0.1:8000",
-			"type": "string"
-		},
-		{
-			"key": "base_tasks_path",
-			"value": "tasks",
+			"value": "http://127.0.0.1:8000/tasks/api",
 			"type": "string"
 		},
 		{

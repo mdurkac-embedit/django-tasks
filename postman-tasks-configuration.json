@@ -9,6 +9,9 @@
 		{
 			"name": "Register",
 			"request": {
+				"auth": {
+					"type": "noauth"
+				},
 				"method": "POST",
 				"header": [],
 				"body": {
@@ -37,6 +40,9 @@
 		{
 			"name": "Login",
 			"request": {
+				"auth": {
+					"type": "noauth"
+				},
 				"method": "POST",
 				"header": [],
 				"body": {
@@ -64,52 +70,19 @@
 		},
 		{
 			"name": "Get projects",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
-				"auth": {
-					"type": "jwt",
-					"jwt": [
-						{
-							"key": "payload",
-							"value": "{\n    \"user_id\": 1\n}",
-							"type": "string"
-						},
-						{
-							"key": "isSecretBase64Encoded",
-							"value": false,
-							"type": "boolean"
-						},
-						{
-							"key": "addTokenTo",
-							"value": "header",
-							"type": "string"
-						},
-						{
-							"key": "header",
-							"value": "{}",
-							"type": "string"
-						},
-						{
-							"key": "secret",
-							"value": "your_secret_key",
-							"type": "string"
-						},
-						{
-							"key": "headerPrefix",
-							"value": "Authorization",
-							"type": "string"
-						},
-						{
-							"key": "algorithm",
-							"value": "HS256",
-							"type": "string"
-						},
-						{
-							"key": "queryParamKey",
-							"value": "token",
-							"type": "string"
-						}
-					]
-				},
 				"method": "GET",
 				"header": [],
 				"url": {
@@ -129,51 +102,6 @@
 		{
 			"name": "Create project",
 			"request": {
-				"auth": {
-					"type": "jwt",
-					"jwt": [
-						{
-							"key": "payload",
-							"value": "{\n    \"user_id\": 1\n}",
-							"type": "string"
-						},
-						{
-							"key": "isSecretBase64Encoded",
-							"value": false,
-							"type": "boolean"
-						},
-						{
-							"key": "addTokenTo",
-							"value": "header",
-							"type": "string"
-						},
-						{
-							"key": "header",
-							"value": "{}",
-							"type": "string"
-						},
-						{
-							"key": "secret",
-							"value": "your_secret_key",
-							"type": "string"
-						},
-						{
-							"key": "headerPrefix",
-							"value": "Authorization",
-							"type": "string"
-						},
-						{
-							"key": "algorithm",
-							"value": "HS256",
-							"type": "string"
-						},
-						{
-							"key": "queryParamKey",
-							"value": "token",
-							"type": "string"
-						}
-					]
-				},
 				"method": "POST",
 				"header": [],
 				"body": {
@@ -200,6 +128,16 @@
 			"response": []
 		}
 	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
 	"event": [
 		{
 			"listen": "prerequest",
@@ -207,7 +145,33 @@
 				"type": "text/javascript",
 				"packages": {},
 				"exec": [
-					""
+					"const env = pm.variables.get(\"base_url\")",
+					"const app_path = pm.variables.get(\"base_tasks_path\")",
+					"const loginUrl = `${env}/${app_path}/api/login`;",
+					"",
+					"const loginPayload = {",
+					"    username: pm.variables.get(\"username\"),",
+					"    password: pm.variables.get(\"password\")",
+					"};",
+					"",
+					"pm.sendRequest({",
+					"    url: loginUrl,",
+					"    method: 'POST',",
+					"    header: {",
+					"        'Content-Type': 'application/json'",
+					"    },",
+					"    body: {",
+					"        mode: 'raw',",
+					"        raw: JSON.stringify(loginPayload)",
+					"    }",
+					"}, function (err, res) {",
+					"    if (err) {",
+					"        console.log(err);",
+					"    } else {",
+					"        const jsonResponse = res.json();",
+					"        pm.environment.set('jwt_token', jsonResponse.token);",
+					"    }",
+					"});"
 				]
 			}
 		},
@@ -231,6 +195,16 @@
 		{
 			"key": "base_tasks_path",
 			"value": "tasks",
+			"type": "string"
+		},
+		{
+			"key": "username",
+			"value": "jeff",
+			"type": "string"
+		},
+		{
+			"key": "password",
+			"value": "jeff",
 			"type": "string"
 		}
 	]

@@ -5,8 +5,8 @@ from datetime import datetime, timedelta
 def generate_jwt(user):
     payload = {
         'user_id': user.id,
-        'exp': datetime.now(datetime.timezone.utc) + settings.JWT_AUTH['JWT_EXPIRATION_DELTA'],
-        'iat': datetime.now(datetime.timezone.utc)
+        'exp': datetime.now() + settings.JWT_AUTH['JWT_EXPIRATION_DELTA'],
+        'iat': datetime.now()
     }
     token = jwt.encode(payload, settings.SECRET_KEY, algorithm='HS256')
     return token

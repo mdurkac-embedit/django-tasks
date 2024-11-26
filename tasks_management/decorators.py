@@ -7,7 +7,7 @@ def token_required(view_func):
     @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
         auth_header = request.headers.get('Authorization')
-        if auth_header:
+        if auth_header and auth_header.startswith('Bearer '):
             token = auth_header.split(' ')[1]
             user_id = decode_jwt(token)
             if user_id:

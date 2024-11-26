@@ -1,6 +1,6 @@
 import jwt
 from django.conf import settings
-from datetime import datetime, timedelta
+from datetime import datetime
 
 def generate_jwt(user):
     payload = {
@@ -14,8 +14,6 @@ def generate_jwt(user):
 def decode_jwt(token):
     try:
         payload = jwt.decode(token, settings.SECRET_KEY, algorithms=['HS256'])
-        return payload['user_id']
-    except jwt.ExpiredSignatureError:
-        return None
-    except jwt.InvalidTokenError:
+        return payload.get('user_id')
+    except Exception:
         return None

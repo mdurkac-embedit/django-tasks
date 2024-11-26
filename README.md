@@ -94,10 +94,9 @@ Authorization: Bearer your_jwt_token
 
 **Parameters**
 
+- `name` (string): Filters proects by name.
 
 **Response:**
-
- `name` (string): Filters proects by name.
 
 - **Success (200):**
 

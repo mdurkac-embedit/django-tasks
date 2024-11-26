@@ -27,7 +27,7 @@ def login_view(request):
         user = authenticate(username=username, password=password)
         if user is not None:
             token = generate_jwt(user)
-            return JsonResponse({'token': token})
+            return JsonResponse({'token': token}, status=200)
         else:
             return JsonResponse({'error': 'Invalid credentials'}, status=400)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
@@ -35,7 +35,6 @@ def login_view(request):
 @token_required
 def projects(request):
     if request.method == 'GET':
-        # search by project name
         name = request.GET.get('name')
         if name:
             projects =  request.user.projects.filter(name__icontains=name)
@@ -83,10 +82,10 @@ def project(request, project_id):
             'end_date': project.end_date,
             'owner': project.owner.username
         }
-        return JsonResponse(project_dto)
+        return JsonResponse(project_dto, safe=False, status=200)
     if request.method == 'DELETE':
         project.delete()
-        return JsonResponse({'message': 'Project deleted'})
+        return JsonResponse({'message': 'Project deleted'}, status=200)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 @token_required
@@ -112,7 +111,7 @@ def project_tasks(request, project_id):
                 'assigned_to': task.assigned_to.username if task.assigned_to else None
             } for task in tasks
         ]
-        return JsonResponse(tasks, safe=False)
+        return JsonResponse(tasks, safe=False, status=200)
     if request.method == 'POST':
         if request.user != project.owner:
             return JsonResponse({'error': 'You are not allowed to create tasks in this project'}, status=403)
@@ -140,9 +139,9 @@ def tasks(request, task_id):
         task = Task.objects.get(id=task_id)
     except Task.DoesNotExist:
         return JsonResponse({'error': 'Task not found'}, status=404)
+    if request.user != task.project.owner and request.user != task.assigned_to:
+            return JsonResponse({'error': 'You are not allowed to access this task'}, status=403)
     if request.method == 'GET':
-        if request.user != task.project.owner and request.user != task.assigned_to:
-            return JsonResponse({'error': 'You are not allowed to view this task'}, status=403)
         task_dto = {
             'id': task.id,
             'title': task.title,
@@ -153,17 +152,13 @@ def tasks(request, task_id):
             'completed': task.completed,
             'assigned_to': task.assigned_to.username if task.assigned_to else None
         }
-        return JsonResponse(task_dto)
+        return JsonResponse(task_dto, safe=False, status=200)
     if request.method == 'PUT':
-        if request.user == task.project.owner or request.user == task.assigned_to:
-            task.completed = True
-            task.save()
-            return JsonResponse({'message': 'Task completed'})
-        return JsonResponse({'error': 'You are not allowed to complete this task'}, status=403)
+        task.completed = True
+        task.save()
+        return JsonResponse({'message': 'Task completed'}, status=200)
     if request.method == 'DELETE':
-        if request.user == task.project.owner or request.user == task.assigned_to:
-            task.delete()
-            return JsonResponse({'message': 'Task deleted'})
-        return JsonResponse({'error': 'You are not allowed to delete this task'}, status=403)
+        task.delete()
+        return JsonResponse({'message': 'Task deleted'}, status=200)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
     

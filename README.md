@@ -433,7 +433,7 @@ Authorization: Bearer your_jwt_token
 
 ```json
 {
-    "error": "You are not allowed to view this task"
+    "error": "You are not allowed to access this task"
 }
 ```
 
@@ -484,7 +484,7 @@ Content-Type: application/json
 
 ```json
 {
-    "error": "You are not allowed to complete this task"
+    "error": "You are not allowed to access this task"
 }
 ```
 
@@ -535,7 +535,7 @@ Content-Type: application/json
 
 ```json
 {
-    "error": "You are not allowed to delete this task"
+    "error": "You are not allowed to access this task"
 }
 ```
 

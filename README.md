@@ -12,6 +12,12 @@ Install libraries: `pip install -r requirements.txt`
 **Method:** `POST`  
 **Description:** Authenticates a user and returns a JWT token.
 
+**Headers:**
+
+```
+Content-Type: application/json
+```
+
 **Request Body:**
 
 ```json
@@ -52,6 +58,12 @@ Install libraries: `pip install -r requirements.txt`
 **URL:** `/api/register`  
 **Method:** `POST`  
 **Description:** Registers a new user.
+
+**Headers:**
+
+```
+Content-Type: application/json
+```
 
 **Request Body:**
 
@@ -182,6 +194,10 @@ Content-Type: application/json
 ```
 Authorization: Bearer your_jwt_token
 ```
+
+**Path Parameters**
+
+- `project_id` (integer): The ID of the project.
 
 **Response:**
 
@@ -326,7 +342,7 @@ Content-Type: application/json
 
 **Request body**
 
-```
+```json
 {
     "title": "Task Title",
     "description": "Task Description",
@@ -384,6 +400,10 @@ Content-Type: application/json
 Authorization: Bearer your_jwt_token
 ```
 
+**Path Parameters:**
+
+- `project_id` (integer): The ID of the task.
+
 **Response:**
 
 - **Success (200):**
@@ -435,6 +455,7 @@ Authorization: Bearer your_jwt_token
 
 ```
 Authorization: Bearer your_jwt_token
+Content-Type: application/json
 ```
 
 **Path Parameters**
@@ -485,6 +506,7 @@ Authorization: Bearer your_jwt_token
 
 ```
 Authorization: Bearer your_jwt_token
+Content-Type: application/json
 ```
 
 **Path Parameters**
@@ -524,8 +546,3 @@ Authorization: Bearer your_jwt_token
     "error": "Task not found"
 }
 ```
-
-## Notes
-
-- All endpoints that require authentication must include the `Authorization` header with a valid JWT token.
-- Replace `your_jwt_token` with the actual token obtained from the login endpoint.

@@ -16,6 +16,6 @@ def token_required(view_func):
                     request.user = user
                     return view_func(request, *args, **kwargs)
                 except User.DoesNotExist:
-                    return JsonResponse({'error': 'Unauthorized'}, status=401)
-        return JsonResponse({'error': 'Unauthorized'}, status=401)
+                    return JsonResponse({'error': 'User does not exist'}, status=401)
+        return JsonResponse({'error': 'Bearer token missing'}, status=401)
     return _wrapped_view

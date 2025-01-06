@@ -8,13 +8,16 @@ import json
 
 def register_view(request):
     if request.method == 'POST':
-        data = json.loads(request.body)
-        username = data.get('username')
-        password = data.get('password')
-        if not username or not password:
-            return JsonResponse({'error': 'Invalid data'}, status=400)
-        user = User.objects.create_user(username=username, password=password)
-        return JsonResponse({'id': user.id}, status=200)
+        try:
+            data = json.loads(request.body)
+            username = data.get('username')
+            password = data.get('password')
+            if not username or not password:
+                return JsonResponse({'error': 'Invalid data'}, status=400)
+            user = User.objects.create_user(username=username, password=password)
+            return JsonResponse({'id': user.id}, status=200)
+        except IntegrityError:
+            return JsonResponse({"error": "User already exists"}, safe=False, status=400)
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 def login_view(request):
@@ -69,6 +72,8 @@ def projects(request):
 
 @token_required
 def project(request, project_id):
+    if  request.method != 'GET' and request.method != 'DELETE':
+        return JsonResponse({'error': 'Invalid request method'}, status=405)
     try:
         project = request.user.projects.get(id=project_id)
     except Project.DoesNotExist:
@@ -123,7 +128,7 @@ def project_tasks(request, project_id):
         completed = False
         assigned_to = data.get('assigned_to')
         if assigned_to:
-            assigned_to = User.objects.get(id=assigned_to)
+            assigned_to = User.objects.get(username=assigned_to)
         else:
             assigned_to = request.user
         try:

@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser
+from django.utils import timezone 
 
 class User(AbstractUser):
     def __str__(self):
@@ -9,7 +10,7 @@ class Project(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
-    start_date = models.DateField(auto_now_add=True)
+    start_date = models.DateField(default=timezone.now)
     end_date = models.DateField(blank=True, null=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='projects')
 
@@ -20,7 +21,7 @@ class Task(models.Model):
     id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
-    created_date = models.DateField(auto_now_add=True)
+    created_date = models.DateField(default=timezone.now)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='created_tasks')
     due_date = models.DateField(null=True)
     completed = models.BooleanField(default=False)

@@ -25,7 +25,7 @@ SECRET_KEY = 'your_secret_key'
 
 
 JWT_AUTH = {
-    'JWT_EXPIRATION_DELTA': datetime.timedelta(seconds=300),
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(minutes=30),
 }
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -42,7 +42,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'tasks_management'
+    'tasks_management',
+    'pay'
 ]
 
 MIDDLEWARE = [

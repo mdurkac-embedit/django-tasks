@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <script src="https://unpkg.com/react@17/umd/react.production.min.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js" crossorigin></script>
+        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+        <title>Hello</title>
+    </head>
+    <body>
+        <div id="app"></div>
+
+        <script type="text/babel">
+            function Register({ userData, setUserData}) {
+                const [username, setUsername] = React.useState('');
+                const [password, setPassword] = React.useState('');
+
+                const handleRegister = async (event) => {
+                    event.preventDefault();
+                    try {
+                        const response = await fetch('/tasks/api/register', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ username, password }),
+                        });
+                        if (response.ok) {
+                            alert('Registration successful! You can now log in.');
+                        } else {
+                            alert('Registration failed. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error during registration:', error);
+                    }
+                };
+
+                return (
+                    <div>
+                        <h2>Register</h2>
+                        <form onSubmit={handleRegister}>
+                            <div>
+                                <label htmlFor="username">Username:</label>
+                                <input
+                                    type="text"
+                                    id="username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="password">Password:</label>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <button type="submit">Register</button>
+                        </form>
+                    </div>
+                );
+            }
+
+            function Login({ userData, setUserData }) {
+                const [username, setUsername] = React.useState('');
+                const [password, setPassword] = React.useState('');
+
+                const handleLogin = async (event) => {
+                    event.preventDefault();
+                    try {
+                        const response = await fetch('/tasks/api/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ username, password }),
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log('Login successful:', data);
+                            setUserData({ ...userData, isLoggedIn: true, username, token: data.token });
+                        } else {
+                            alert('Login failed. Please check your credentials.');
+                        }
+                    } catch (error) {
+                        console.error('Error during login:', error);
+                    }
+                };
+
+                return (
+                    <div>
+                        <h2>Login</h2>
+                        <form onSubmit={handleLogin}>
+                            <div>
+                                <label htmlFor="username">Username:</label>
+                                <input
+                                    type="text"
+                                    id="username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="password">Password:</label>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <button type="submit">Login</button>
+                        </form>
+                    </div>
+                );
+            }
+
+            function Accounts({ userData }) {
+                return (
+                    <div>
+                        <h2>Accounts</h2>
+                        {
+                            (!userData.accounts || userData.accounts.length === 0) && 
+                            <p>No accounts found</p>
+                        }
+                        {
+                            userData.accounts && userData.accounts.length > 0 && 
+                            <ul>
+                                {userData.accounts.map((account) => (
+                                    <li key={account.id}>
+                                        {account.account_type} ({account.account_number}): {account.balance} {account.currency}
+                                    </li>
+                                ))}
+                            </ul>
+                        }
+                        
+                    </div>
+                );
+            }
+
+            function OpenAccount({ userData, setUserData, fetchAccounts }) {
+                const [currency, setCurrency] = React.useState('CZK');
+                const [type, setType] = React.useState('regular');
+
+                const handleOpenAccount = async (event) => {
+                    event.preventDefault();
+                    try {
+                        const response = await fetch('/pay/api/accounts/open', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${userData.token}`
+                            },
+                            body: JSON.stringify({ currency, type }),
+                        });
+                        if (response.ok) {
+                            fetchAccounts();
+                            alert('Account opened successfully!');
+                        } else if (response.status === 401) {
+                            const errorData = await response.json();
+                            setUserData({ ...userData, isLoggedIn: false, username: '', token: '', accounts: [] });
+                            alert('Session expired. Please log in again.');
+                        } else {
+                            alert('Failed to open account. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error during account opening:', error);
+                    }
+                };
+                return (
+                    <div>
+                        <h2>Open Account</h2>
+                        <form onSubmit={handleOpenAccount}>
+                            <div>
+                                <label htmlFor="currency">Currency:</label>
+                                <select
+                                    id="currency"
+                                    value={currency}
+                                    onChange={(e) => setCurrency(e.target.value)}
+                                >
+                                    <option value="CZK">CZK</option>
+                                    <option value="EUR">EUR</option>
+                                    <option value="USD">USD</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label htmlFor="type">Account Type:</label>
+                                <select
+                                    id="type"
+                                    value={type}
+                                    onChange={(e) => setType(e.target.value)}
+                                >
+                                    <option value="regular">Regular</option>
+                                    <option value="savings">Savings</option>
+                                </select>
+                            </div>
+                            <button type="submit">Open Account</button>
+                        </form>
+                    </div>
+                );
+            }
+
+            function AddMoney({}) {
+                return (
+                    <div>
+                        <h2>Add Money</h2>
+                        {/* Add money form can be implemented here */}
+                    </div>
+                );
+            }
+
+            function SendMoney({}) {
+                return (
+                    <div>
+                        <h2>Send Money</h2>
+                        {/* Send money form can be implemented here */}
+                    </div>
+                );
+            }
+
+            function Transactions({}) {
+                return (
+                    <div>
+                        <h2>Transactions</h2>
+                        {/* Transactions can be implemented here */}
+                    </div>
+                );
+            }
+
+            function App() {
+                const [userData, setUserData] = React.useState({
+                    isLoggedIn: false,
+                    username: '',
+                    token: '',
+                    accounts: [],
+                });
+
+                const [displaySettings, setDisplaySettings] = React.useState({
+                    showLogin: true,
+                    showRegister: false,
+                    showAccounts: true,
+                    showOpenAccount: false,
+                    showAddMoney: false,
+                    showTransactions: false,
+                    showSendMoney: false,
+                });
+
+                const logout = () => {
+                    setUserData({ ...userData, isLoggedIn: false, username: '', token: '', accounts: [] });
+                    setDisplaySettings({ ...displaySettings, showLogin: true, showRegister: false, showAccounts: true, showOpenAccount: false, showAddMoney: false, showTransactions: false, showSendMoney: false });
+                };
+
+                const fetchAccounts = async () => {
+                        if (userData.isLoggedIn) {
+                            try {
+                                const response = await fetch('/pay/api/accounts', {
+                                    method: 'GET',
+                                    headers: {
+                                        'Authorization': `Bearer ${userData.token}`,
+                                    },
+                                });
+                                if (response.ok) {
+                                    const data = await response.json();
+                                    console.log('Accounts fetched successfully:', data);
+                                    setUserData({ ...userData, accounts: data.accounts });
+                                } else if (response.status === 401) {
+                                        const errorData = await response.json();
+                                        setUserData({ ...userData, isLoggedIn: false, username: '', token: '', accounts: [] });
+                                        alert('Session expired. Please log in again.');
+                                } else {
+                                    console.error('Failed to fetch accounts');
+                                }
+                            } catch (error) {
+                                console.error('Error fetching accounts:', error);
+                            }
+                        }
+                    };
+
+                const triggerLogin = () => {
+                    setDisplaySettings({ ...displaySettings, showRegister: false, showLogin: true });
+                };
+
+                const triggerRegister = () => {
+                    setDisplaySettings({ ...displaySettings, showLogin: false, showRegister: true });
+                };
+
+                const triggerAccounts = () => {
+                    setDisplaySettings({ ...displaySettings, showAccounts: true, showOpenAccount: false, showAddMoney: false, showTransactions: false });
+                    fetchAccounts();
+                };
+
+                const triggerOpenAccount = () => {
+                    setDisplaySettings({ ...displaySettings, showOpenAccount: true, showAccounts: false, showAddMoney: false, showTransactions: false, showSendMoney: false });
+                };
+
+                const triggerAddMoney = () => {
+                    setDisplaySettings({ ...displaySettings, showAddMoney: true, showAccounts: false, showOpenAccount: false, showTransactions: false, showSendMoney: false });
+                };
+
+                const triggerTransactions = () => {
+                    setDisplaySettings({ ...displaySettings, showTransactions: true, showAccounts: false, showOpenAccount: false, showAddMoney: false, showSendMoney: false });
+                };
+
+                const triggerSendMoney = () => {
+                    setDisplaySettings({ ...displaySettings, showSendMoney: true, showAccounts: false, showOpenAccount: false, showAddMoney: false, showTransactions: false });
+                };
+
+                React.useEffect(() => {
+                    fetchAccounts();
+                }, [userData.isLoggedIn, userData.token]);
+                
+                return (
+                    <div>
+                        {!userData.isLoggedIn && (
+                            <div>
+                                <button onClick={triggerLogin}>Login</button>
+                                <button onClick={triggerRegister}>Register</button>
+
+                                { 
+                                    displaySettings.showLogin && (<Login userData={userData} setUserData={setUserData}/>)
+                                }
+                                {
+                                    displaySettings.showRegister && (<Register userData={userData} setUserData={setUserData}/>)}
+                            </div>
+                        )}
+
+                        {userData.isLoggedIn && (
+                            <div>
+                                <button onClick={triggerAccounts}>Accounts</button>
+                                <button onClick={triggerOpenAccount}>Open Account</button>
+                                <button onClick={triggerAddMoney}>Add Money</button>
+                                <button onClick={triggerSendMoney}>Send Money</button>
+                                <button onClick={triggerTransactions}>Transactions</button>
+                                <button onClick={logout}>Logout</button>
+
+                                <h1>Welcome {userData.username}!</h1>
+
+                                {
+                                    displaySettings.showAccounts && (<Accounts userData={userData} />)
+                                }
+
+                                {
+                                    displaySettings.showOpenAccount && (<OpenAccount userData={userData} setUserData={setUserData} fetchAccounts={fetchAccounts} />)
+                                }
+
+                                {
+                                    displaySettings.showAddMoney && (<AddMoney />)
+                                }
+
+                                {
+                                    displaySettings.showSendMoney && (<SendMoney />)
+                                }
+
+                                {
+                                    displaySettings.showTransactions && (<Transactions />)
+                                }
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            ReactDOM.render(<App />, document.querySelector("#app"));
+        </script>
+    </body>
+</html>

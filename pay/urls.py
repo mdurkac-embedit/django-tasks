@@ -11,4 +11,5 @@ urlpatterns = [
     path('api/accounts/open', views.open_account, name='open_account'),
     path('api/accounts/<str:account_number>/deposit', views.deposit, name='deposit'),
     path('api/accounts/<str:account_number>/transfer', views.transfer, name='transfer'),
+    path('api/transactions', views.get_transactions, name='get_transactions'),
 ]

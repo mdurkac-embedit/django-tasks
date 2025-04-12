@@ -3,6 +3,8 @@ SUPPORTED_ACCOUNT_TYPES = [
     'regular', 'savings'
 ]
 
+DEFAULT_TRANSACTION_PAGE_SIZE = 10
+
 SUPPORTED_CURRENCIES = [
     'USD', 'EUR', 'CZK'
 ]

@@ -4,7 +4,7 @@
         <script src="https://unpkg.com/react@17/umd/react.production.min.js" crossorigin></script>
         <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js" crossorigin></script>
         <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
-        <title>Hello</title>
+        <title>Pay App</title>
     </head>
     <body>
         <div id="app"></div>
@@ -491,11 +491,105 @@
                 );
             }
 
-            function Transactions({}) {
+            function Transactions({ userData }) {
+                const [transactions, setTransactions] = React.useState([]);
+                const [currentPage, setCurrentPage] = React.useState(1);
+                const [totalPages, setTotalPages] = React.useState(1);
+                const [pageSize, setPageSize] = React.useState(10);
+
+                const fetchTransactions = async () => {
+                    if (userData.isLoggedIn) {
+                        try {
+                            const response = await fetch(`/pay/api/transactions?page=${currentPage}&pageSize=${pageSize}`, {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${userData.token}`,
+                                },
+                            });
+                            if (response.ok) {
+                                const data = await response.json();
+                                setTransactions(data.transactions);
+                                setTotalPages(data.total_pages);
+                            } else if (response.status === 401) {
+                                alert('Session expired. Please log in again.');
+                            } else {
+                                console.error('Failed to fetch transactions');
+                            }
+                        } catch (error) {
+                            console.error('Error fetching transactions:', error);
+                        }
+                    }
+                };
+
+                React.useEffect(() => {
+                    fetchTransactions(currentPage, pageSize);
+                }, [currentPage, pageSize]);
+
+                const handleNextPage = () => {
+                    if (currentPage < totalPages) {
+                        setCurrentPage(currentPage + 1);
+                    }
+                };
+
+                const handlePreviousPage = () => {
+                    if (currentPage > 1) {
+                        setCurrentPage(currentPage - 1);
+                    }
+                };
+
                 return (
                     <div>
-                        <h2>Transactions</h2>
-                        {/* Transactions can be implemented here */}
+                        <h2>Authorized transactions</h2>
+                        {transactions.length === 0 ? (
+                            <p>No transactions found</p>
+                        ) : (
+                            <ul>
+                                {transactions.map((transaction) => (
+                                    <li key={transaction.id}>
+                                        <div>   
+                                            {transaction.status} at {transaction.created_at}
+                                        </div>
+                                        <div>{transaction.from_account ? `From: ${transaction.from_account}` : transaction.type}</div>
+                                        <div>To: {transaction.to_account}</div>
+                                        <div>
+                                            {transaction.original_amount === transaction.converted_amount ? (
+                                                <div>{transaction.original_amount} {transaction.target_currency}</div>
+                                            ) : (
+                                                <div>
+                                                    {transaction.original_amount} {transaction.original_currency} ({transaction.converted_amount} {transaction.target_currency})
+                                                </div>
+                                            )}
+                                        </div>
+                                        <br/>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                        <div>
+                            <button onClick={handlePreviousPage} disabled={currentPage === 1}>
+                                Previous
+                            </button>
+                            <span> Page {currentPage} of {totalPages} </span>
+                            <button onClick={handleNextPage} disabled={currentPage === totalPages}>
+                                Next
+                            </button>
+                        </div>
+                        <div>
+                            <label htmlFor="pageSize">Page Size:</label>
+                            <select
+                                id="pageSize"
+                                value={pageSize}
+                                onChange={(e) => {
+                                    setPageSize(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                            >
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
                     </div>
                 );
             }
@@ -618,7 +712,7 @@
                             displaySettings.showSendMoney && (<SendMoney userData={userData} fetchAccounts={fetchAccounts} />)
                         }
                         {
-                            displaySettings.showTransactions && (<Transactions />)
+                            displaySettings.showTransactions && (<Transactions userData={userData} />)
                         }
                     </div>
                 );

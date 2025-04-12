@@ -2,9 +2,9 @@ from django.shortcuts import render
 from tasks_management.decorators import token_required
 from django.http import JsonResponse
 from decimal import Decimal, InvalidOperation
-from .settings import SUPPORTED_ACCOUNT_TYPES
+from .settings import SUPPORTED_ACCOUNT_TYPES, DEFAULT_TRANSACTION_PAGE_SIZE
 
-from .models import Account
+from .models import Account, Transaction
 from .converter import convert, SUPPORTED_CURRENCIES
 from .transaction_helper import create_transaction
 import json
@@ -123,6 +123,16 @@ def transfer(request, account_number):
             target_amount = amount
             
             if source_account == target_account:
+                create_transaction(
+                    to_account=target_account,
+                    from_account=source_account,
+                    original_amount=original_amount,
+                    converted_amount=target_amount,
+                    conversion_rate=1,
+                    authorized_by=request.user,
+                    transaction_type='Transfer',
+                    status='Failed (same account)'
+                )
                 return JsonResponse({'message': 'Cannot transfer to the same account'}, status=400)
             
             coversion_rate = 1
@@ -138,7 +148,7 @@ def transfer(request, account_number):
                     conversion_rate=coversion_rate,
                     authorized_by=request.user,
                     transaction_type='Transfer',
-                    status='Failed'
+                    status='Failed (insufficient funds)'
                 )
                 return JsonResponse({'message': 'Insufficient funds'}, status=400)
 
@@ -162,5 +172,37 @@ def transfer(request, account_number):
             return JsonResponse({'message': 'Account not found'}, status=404)
         except Exception:
             return JsonResponse({'message': 'Transfer failed, try again later'}, status=500)
+    else:
+        return JsonResponse({'message': 'Invalid request method'}, status=400)
+
+
+@token_required
+def get_transactions(request):
+    if request.method == 'GET':
+        page = int(request.GET.get('page', 1))
+        page_size = int(request.GET.get('pageSize', DEFAULT_TRANSACTION_PAGE_SIZE))
+        total_pages = Transaction.objects.filter(authorized_by=request.user).count() // page_size + 1
+        offset = (page - 1) * page_size
+        transactions = Transaction.objects.filter(authorized_by=request.user).order_by('-created_at')[offset:offset + page_size]
+        return JsonResponse(
+            {
+                'transactions': [
+                    {
+                        'id': t.id,
+                        'from_account': t.from_account.account_number if t.from_account else None, 
+                        'to_account': t.to_account.account_number, 
+                        'original_amount': str(t.original_amount),
+                        'original_currency': t.from_account.currency if t.from_account else None,
+                        'converted_amount': str(t.converted_amount),
+                        'target_currency': t.to_account.currency,
+                        'conversion_rate': str(t.conversion_rate), 
+                        'created_at': t.created_at.strftime('%Y-%m-%d %H:%M:%S'), 
+                        'type': t.type, 
+                        'status': t.status
+                    } for t in transactions
+                ],
+                'total_pages': total_pages
+            }
+        )
     else:
         return JsonResponse({'message': 'Invalid request method'}, status=400)

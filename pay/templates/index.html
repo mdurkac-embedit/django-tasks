@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <script src="https://unpkg.com/react@17/umd/react.production.min.js" crossorigin></script>
+        <script src="https://unpkg.com/react-dom@17/umd/react-dom.production.min.js" crossorigin></script>
+        <script src="https://unpkg.com/babel-standalone@6/babel.min.js"></script>
+        <title>Pay App</title>
+    </head>
+    <body>
+        <div id="app"></div>
+
+        <script type="text/babel">
+            function Register({ userData, setUserData}) {
+                const [username, setUsername] = React.useState('');
+                const [password, setPassword] = React.useState('');
+
+                const handleRegister = async (event) => {
+                    event.preventDefault();
+                    try {
+                        const response = await fetch('/tasks/api/register', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ username, password }),
+                        });
+                        if (response.ok) {
+                            alert('Registration successful! You can now log in.');
+                        } else {
+                            alert('Registration failed. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error during registration:', error);
+                    }
+                };
+
+                return (
+                    <div>
+                        <h2>Register</h2>
+                        <form onSubmit={handleRegister}>
+                            <div>
+                                <label htmlFor="username">Username:</label>
+                                <input
+                                    type="text"
+                                    id="username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="password">Password:</label>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <button type="submit">Register</button>
+                        </form>
+                    </div>
+                );
+            }
+
+            function Login({ userData, setUserData }) {
+                const [username, setUsername] = React.useState('');
+                const [password, setPassword] = React.useState('');
+
+                const handleLogin = async (event) => {
+                    event.preventDefault();
+                    try {
+                        const response = await fetch('/tasks/api/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ username, password }),
+                        });
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log('Login successful:', data);
+                            setUserData({ ...userData, isLoggedIn: true, username, token: data.token });
+                        } else {
+                            alert('Login failed. Please check your credentials.');
+                        }
+                    } catch (error) {
+                        console.error('Error during login:', error);
+                    }
+                };
+
+                return (
+                    <div>
+                        <h2>Login</h2>
+                        <form onSubmit={handleLogin}>
+                            <div>
+                                <label htmlFor="username">Username:</label>
+                                <input
+                                    type="text"
+                                    id="username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <div>
+                                <label htmlFor="password">Password:</label>
+                                <input
+                                    type="password"
+                                    id="password"
+                                    value={password}
+                                    onChange={(e) => setPassword(e.target.value)}
+                                    required
+                                />
+                            </div>
+                            <button type="submit">Login</button>
+                        </form>
+                    </div>
+                );
+            }
+
+            function Accounts({ userData, fetchAccounts }) {
+                React.useEffect(() => {
+                    fetchAccounts();
+                }, []);
+
+                if (!userData.accountsLoaded) {
+                    return (
+                        <div>
+                            <h2>Accounts</h2>
+                            <p>Loading...</p>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div>
+                        <h2>Accounts</h2>
+                        {
+                            (!userData.accounts || userData.accounts.length === 0) && 
+                            <p>No accounts found</p>
+                        }
+                        {
+                            userData.accounts && userData.accounts.length > 0 && 
+                            <ul>
+                                {userData.accounts.map((account) => (
+                                    <li key={account.id}>
+                                        {account.account_type} ({account.account_number}): {account.balance} {account.currency}
+                                    </li>
+                                ))}
+                            </ul>
+                        }
+                    </div>
+                );
+            }
+
+            function OpenAccount({ userData, setUserData, fetchAccounts }) {
+                const [currency, setCurrency] = React.useState('');
+                const [type, setType] = React.useState('');
+                const [currencies, setCurrencies] = React.useState([]);
+                const [accountTypes, setAccountTypes] = React.useState([]);
+
+                const fetchAccountTypes = async () => {
+                    if (userData.isLoggedIn) {
+                        try {
+                            const response = await fetch('/pay/api/accounts/types', {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${userData.token}`,
+                                },
+                            });
+                            if (response.ok) {
+                                const data = await response.json();
+                                console.log('Account types fetched successfully:', data);
+                                setAccountTypes(data.account_types);
+                            } else if (response.status === 401) {
+                                    const errorData = await response.json();
+                                    setUserData({ ...userData, isLoggedIn: false, username: '', token: '', accounts: [] });
+                                    alert('Session expired. Please log in again.');
+                            } else {
+                                console.error('Failed to fetch account types');
+                            }
+                        } catch (error) {
+                            console.error('Error fetching account types:', error);
+                        }
+                    }
+                };
+
+                const fetchCurrencies = async () => {
+                    if (userData.isLoggedIn) {
+                        try {
+                            const response = await fetch('/pay/api/accounts/currencies', {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${userData.token}`,
+                                },
+                            });
+                            if (response.ok) {
+                                const data = await response.json();
+                                console.log('Currencies fetched successfully:', data);
+                                setCurrencies(data.currencies);
+                            } else if (response.status === 401) {
+                                    const errorData = await response.json();
+                                    setUserData({ ...userData, isLoggedIn: false, username: '', token: '', accounts: [] });
+                                    alert('Session expired. Please log in again.');
+                            } else {
+                                console.error('Failed to fetch currencies');
+                            }
+                        } catch (error) {
+                            console.error('Error fetching currencies:', error);
+                        }
+                    }
+                };
+
+                const handleOpenAccount = async (event) => {
+                    event.preventDefault();
+                    try {
+                        const response = await fetch('/pay/api/accounts/open', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${userData.token}`
+                            },
+                            body: JSON.stringify({ currency, type }),
+                        });
+                        if (response.ok) {
+                            fetchAccounts();
+                            alert('Account opened successfully!');
+                        } else if (response.status === 401) {
+                            const errorData = await response.json();
+                            setUserData({ ...userData, isLoggedIn: false, username: '', token: '', accounts: [] });
+                            alert('Session expired. Please log in again.');
+                        } else {
+                            alert('Failed to open account. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error during account opening:', error);
+                    }
+                };
+
+                React.useEffect(() => {
+                    fetchAccountTypes();
+                    fetchCurrencies();
+                }, []);
+
+                if (currencies.length == 0 || accountTypes.length == 0) {
+                    return (
+                        <div>
+                            <h2>Open Account</h2>
+                            <p>Loading...</p>
+                        </div>
+                    );
+                }
+
+                return (
+                    <div>
+                        <h2>Open Account</h2>
+                        <form onSubmit={handleOpenAccount}>
+                            <div>
+                                <label htmlFor="currency">Currency:</label>
+                                <select
+                                    id="currency"
+                                    value={currency}
+                                    onChange={(e) => setCurrency(e.target.value)}
+                                    required
+                                >
+                                    <option value="" disabled>Select currency</option>
+                                    {currencies.map((availableCurrency) => (
+                                        <option key={availableCurrency} value={availableCurrency}>
+                                            {availableCurrency}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label htmlFor="type">Account Type:</label>
+                                <select
+                                    id="type"
+                                    value={type}
+                                    onChange={(e) => setType(e.target.value)}
+                                    required
+                                >   
+                                    <option value="" disabled>Select account type</option>
+                                    {accountTypes.map((availableType) => (
+                                        <option key={availableType} value={availableType}>
+                                            {availableType}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <br/>
+                            <button type="submit">Open Account</button>
+                        </form>
+                    </div>
+                );
+            }
+
+            function AddMoney({ userData, fetchAccounts }) {
+                const [selectedAccount, setSelectedAccount] = React.useState('');
+                const [amount, setAmount] = React.useState('');
+
+                const handleAddMoney = async (event) => {
+                    event.preventDefault();
+                    if (!selectedAccount || !amount) {
+                        alert('Please select an account and enter an amount.');
+                        return;
+                    }
+                    try {
+                        const response = await fetch(`/pay/api/accounts/${selectedAccount}/deposit`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${userData.token}`,
+                            },
+                            body: JSON.stringify({ amount }),
+                        });
+                        if (response.ok) {
+                            alert('Money added successfully!');
+                            fetchAccounts(); // Refresh accounts after adding money
+                        } else if (response.status === 401) {
+                            alert('Session expired. Please log in again.');
+                        } else {
+                            alert('Failed to add money. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error adding money:', error);
+                    }
+                };
+
+                React.useEffect(() => {
+                    fetchAccounts();
+                }, []);
+
+                return (
+                    <div>
+                        <h2>Add Money</h2>
+                        <form onSubmit={handleAddMoney}>
+                            <div>
+                                <label htmlFor="account">Select Account:</label>
+                                <select
+                                    id="account"
+                                    value={selectedAccount}
+                                    onChange={(e) => setSelectedAccount(e.target.value)}
+                                    required
+                                >
+                                    <option value="" disabled>Select an account</option>
+                                    {userData.accounts.map((account) => (
+                                        <option key={account.account_number} value={account.account_number}>
+                                            {account.account_type} ({account.account_number}) - {account.balance} {account.currency}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label htmlFor="amount">Amount:</label>
+                                <input
+                                    type="number"
+                                    id="amount"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    min="0.01"
+                                    step="0.01"
+                                    placeholder="Enter amount"
+                                    required
+                                />
+                            </div>
+                            <br/>
+                            <button type="submit">Add Money</button>
+                        </form>
+                    </div>
+                );
+            }
+
+            function SendMoney({ userData, fetchAccounts }) {
+                const [selectedAccount, setSelectedAccount] = React.useState('');
+                const [targetAccount, setTargetAccount] = React.useState('');
+                const [betweenMyAcounts, setBetweenMyAccounts] = React.useState(false);
+                const [amount, setAmount] = React.useState('');
+
+                const resetValues = () => {
+                    setSelectedAccount('');
+                    setTargetAccount('');
+                    setAmount('');
+                };
+
+                const handleSendMoney = async (event) => {
+                    event.preventDefault();
+                    if (!selectedAccount || !targetAccount || !amount) {
+                        alert('Please fill in all fields.');
+                        return;
+                    }
+                    try {
+                        const response = await fetch(`/pay/api/accounts/${selectedAccount}/transfer`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${userData.token}`,
+                            },
+                            body: JSON.stringify({ target_account: targetAccount, amount }),
+                        });
+                        if (response.ok) {
+                            alert('Money sent successfully!');
+                            fetchAccounts();
+                            resetValues();
+                        } else if (response.status === 401) {
+                            alert('Session expired. Please log in again.');
+                        } else {
+                            alert('Failed to send money. Please try again.');
+                        }
+                    } catch (error) {
+                        console.error('Error sending money:', error);
+                    }
+                };
+
+                React.useEffect(() => {
+                    fetchAccounts();
+                }, []);
+
+                return (
+                    <div>
+                        <h2>Send Money</h2>
+                        <div>
+                            <button onClick={() => setBetweenMyAccounts(true)}>Between My Accounts</button>
+                            <button onClick={() => setBetweenMyAccounts(false)}>To Other Account</button>
+                        </div>
+                        <br/>
+                        <form onSubmit={handleSendMoney}>
+                            <div>
+                                <label htmlFor="account">Select Your Account:</label>
+                                <select
+                                    id="account"
+                                    value={selectedAccount}
+                                    onChange={(e) => setSelectedAccount(e.target.value)}
+                                    required
+                                >
+                                    <option value="" disabled>Select an account</option>
+                                    {userData.accounts.map((account) => (
+                                        <option key={account.account_number} value={account.account_number}>
+                                            {account.account_type} ({account.account_number}) - {account.balance} {account.currency}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label htmlFor="targetAccount">Target Account:</label>
+                                {
+                                    betweenMyAcounts ? (
+                                        <select
+                                            id="targetAccount"
+                                            value={targetAccount}
+                                            onChange={(e) => setTargetAccount(e.target.value)}
+                                            required
+                                        >
+                                            <option value="" disabled>Select an account</option>
+                                            {userData.accounts.map((account) => (
+                                                <option key={account.account_number} value={account.account_number}>
+                                                    {account.account_type} ({account.account_number}) - {account.balance} {account.currency}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    ) : (
+                                        <input
+                                            type="text"
+                                            id="targetAccount"
+                                            value={targetAccount}
+                                            onChange={(e) => setTargetAccount(e.target.value)}
+                                            placeholder="Enter target account number"
+                                            required
+                                        />
+                                    )
+                                }
+                            </div>
+                            <div>
+                                <label htmlFor="amount">Amount:</label>
+                                <input
+                                    type="number"
+                                    id="amount"
+                                    value={amount}
+                                    onChange={(e) => setAmount(e.target.value)}
+                                    min="0.01"
+                                    step="0.01"
+                                    placeholder="Enter amount"
+                                    required
+                                />
+                            </div>
+                            <br/>
+                            <button type="submit">Send Money</button>
+                        </form>
+                    </div>
+                );
+            }
+
+            function Transactions({ userData }) {
+                const [transactions, setTransactions] = React.useState([]);
+                const [currentPage, setCurrentPage] = React.useState(1);
+                const [totalPages, setTotalPages] = React.useState(1);
+                const [pageSize, setPageSize] = React.useState(10);
+
+                const fetchTransactions = async () => {
+                    if (userData.isLoggedIn) {
+                        try {
+                            const response = await fetch(`/pay/api/transactions?page=${currentPage}&pageSize=${pageSize}`, {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${userData.token}`,
+                                },
+                            });
+                            if (response.ok) {
+                                const data = await response.json();
+                                setTransactions(data.transactions);
+                                setTotalPages(data.total_pages);
+                            } else if (response.status === 401) {
+                                alert('Session expired. Please log in again.');
+                            } else {
+                                console.error('Failed to fetch transactions');
+                            }
+                        } catch (error) {
+                            console.error('Error fetching transactions:', error);
+                        }
+                    }
+                };
+
+                React.useEffect(() => {
+                    fetchTransactions(currentPage, pageSize);
+                }, [currentPage, pageSize]);
+
+                const handleNextPage = () => {
+                    if (currentPage < totalPages) {
+                        setCurrentPage(currentPage + 1);
+                    }
+                };
+
+                const handlePreviousPage = () => {
+                    if (currentPage > 1) {
+                        setCurrentPage(currentPage - 1);
+                    }
+                };
+
+                return (
+                    <div>
+                        <h2>Authorized transactions</h2>
+                        {transactions.length === 0 ? (
+                            <p>No transactions found</p>
+                        ) : (
+                            <ul>
+                                {transactions.map((transaction) => (
+                                    <li key={transaction.id}>
+                                        <div>   
+                                            {transaction.status} at {transaction.created_at}
+                                        </div>
+                                        <div>{transaction.from_account ? `From: ${transaction.from_account}` : transaction.type}</div>
+                                        <div>To: {transaction.to_account}</div>
+                                        <div>
+                                            {transaction.original_amount === transaction.converted_amount ? (
+                                                <div>{transaction.original_amount} {transaction.target_currency}</div>
+                                            ) : (
+                                                <div>
+                                                    {transaction.original_amount} {transaction.original_currency} ({transaction.converted_amount} {transaction.target_currency})
+                                                </div>
+                                            )}
+                                        </div>
+                                        <br/>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                        <div>
+                            <button onClick={handlePreviousPage} disabled={currentPage === 1}>
+                                Previous
+                            </button>
+                            <span> Page {currentPage} of {totalPages} </span>
+                            <button onClick={handleNextPage} disabled={currentPage === totalPages}>
+                                Next
+                            </button>
+                        </div>
+                        <div>
+                            <label htmlFor="pageSize">Page Size:</label>
+                            <select
+                                id="pageSize"
+                                value={pageSize}
+                                onChange={(e) => {
+                                    setPageSize(e.target.value);
+                                    setCurrentPage(1);
+                                }}
+                            >
+                                <option value="5">5</option>
+                                <option value="10">10</option>
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                            </select>
+                        </div>
+                    </div>
+                );
+            }
+
+            function App() {
+                const [userData, setUserData] = React.useState({
+                    isLoggedIn: false,
+                    username: '',
+                    token: '',
+                    accounts: [],
+                    accountsLoaded: false,
+                });
+
+                const [displaySettings, setDisplaySettings] = React.useState({
+                    showLogin: true,
+                    showRegister: false,
+                    showAccounts: true,
+                    showOpenAccount: false,
+                    showAddMoney: false,
+                    showSendMoney: false,
+                    showTransactions: false,
+                });
+
+                const logout = () => {
+                    setUserData({ ...userData, isLoggedIn: false, username: '', token: '', accounts: [] });
+                    setDisplaySettings({ ...displaySettings, showLogin: true, showRegister: false, showAccounts: true, showOpenAccount: false, showAddMoney: false, showTransactions: false, showSendMoney: false });
+                };
+
+                const fetchAccounts = async () => {
+                    if (userData.isLoggedIn) {
+                        try {
+                            const response = await fetch('/pay/api/accounts', {
+                                method: 'GET',
+                                headers: {
+                                    'Authorization': `Bearer ${userData.token}`,
+                                },
+                            });
+                            if (response.ok) {
+                                const data = await response.json();
+                                console.log('Accounts fetched successfully:', data);
+                                setUserData({ ...userData, accounts: data.accounts, accountsLoaded: true });
+                            } else if (response.status === 401) {
+                                    const errorData = await response.json();
+                                    setUserData({ ...userData, isLoggedIn: false, username: '', token: '', accounts: [] });
+                                    alert('Session expired. Please log in again.');
+                            } else {
+                                console.error('Failed to fetch accounts');
+                            }
+                        } catch (error) {
+                            console.error('Error fetching accounts:', error);
+                        }
+                    }
+                };
+                
+                const triggerLogin = () => {
+                    setDisplaySettings({ ...displaySettings, showRegister: false, showLogin: true });
+                };
+
+                const triggerRegister = () => {
+                    setDisplaySettings({ ...displaySettings, showLogin: false, showRegister: true });
+                };
+
+                const triggerAccounts = () => {
+                    setDisplaySettings({ ...displaySettings, showAccounts: true, showOpenAccount: false, showAddMoney: false, showTransactions: false, showSendMoney: false });
+                };
+
+                const triggerOpenAccount = () => {
+                    setDisplaySettings({ ...displaySettings, showAccounts: false, showOpenAccount: true, showAddMoney: false, showTransactions: false, showSendMoney: false });
+                };
+
+                const triggerAddMoney = () => {
+                    fetchAccounts();
+                    setDisplaySettings({ ...displaySettings, showAccounts: false, showOpenAccount: false, showAddMoney: true, showTransactions: false, showSendMoney: false });
+                };
+
+                const triggerTransactions = () => {
+                    setDisplaySettings({ ...displaySettings, showAccounts: false, showOpenAccount: false, showAddMoney: false, showTransactions: true, showSendMoney: false });
+                };
+
+                const triggerSendMoney = () => {
+                    fetchAccounts();
+                    setDisplaySettings({ ...displaySettings, showAccounts: false, showOpenAccount: false, showAddMoney: false, showTransactions: false, showSendMoney: true });
+                };
+
+                if (!userData.isLoggedIn) {
+                    return (
+                        <div>
+                            <button onClick={triggerLogin}>Login</button>
+                            <button onClick={triggerRegister}>Register</button>
+                            { 
+                                displaySettings.showLogin && (<Login userData={userData} setUserData={setUserData}/>)
+                            }
+                            {
+                                displaySettings.showRegister && (<Register userData={userData} setUserData={setUserData}/>)
+                            }
+                        </div>
+                    );
+                };
+                
+                return (
+                    <div>
+                        <button onClick={triggerAccounts}>Accounts</button>
+                        <button onClick={triggerOpenAccount}>Open Account</button>
+                        <button onClick={triggerAddMoney}>Add Money</button>
+                        <button onClick={triggerSendMoney}>Send Money</button>
+                        <button onClick={triggerTransactions}>Transactions</button>
+                        <button onClick={logout}>Logout</button>
+
+                        <h1>Welcome {userData.username}!</h1>
+                        {
+                            displaySettings.showAccounts && (<Accounts userData={userData} key={userData.accountsLoaded} fetchAccounts={fetchAccounts} />)
+                        }
+                        {
+                            displaySettings.showOpenAccount && (<OpenAccount userData={userData} setUserData={setUserData} fetchAccounts={fetchAccounts} />)
+                        }
+                        {
+                            displaySettings.showAddMoney && (<AddMoney userData={userData} fetchAccounts={fetchAccounts} />)
+                        }
+                        {
+                            displaySettings.showSendMoney && (<SendMoney userData={userData} fetchAccounts={fetchAccounts} />)
+                        }
+                        {
+                            displaySettings.showTransactions && (<Transactions userData={userData} />)
+                        }
+                    </div>
+                );
+            }
+
+            ReactDOM.render(<App />, document.querySelector("#app"));
+        </script>
+    </body>
+</html>
